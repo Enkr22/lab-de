@@ -1,0 +1,18 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lab_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_PID: "Developer"
+      MSSQL_COLLATION: "Modern_Spanish_CI_AS"
+    ports:
+      - "1434:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    mem_limit: 4g
+    restart: unless-stopped
+
+volumes:
+  sqldata:
