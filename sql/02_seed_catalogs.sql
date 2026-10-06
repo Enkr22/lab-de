@@ -98,3 +98,19 @@ WHERE NOT EXISTS (
       AND pc.Code = v.Code
 );
 GO
+
+/* ---------- Conceptos de finiquito: genéricos para todos los países ---------- */
+-- Se agregaron para la etapa 07. Idempotente: si ya existen, no hace nada.
+INSERT INTO payroll.PayrollConcept (CountryCode, Code, Name, ConceptType)
+SELECT c.CountryCode, v.Code, v.Name, v.ConceptType
+FROM payroll.Country AS c
+CROSS JOIN (VALUES
+    ('F001', N'Indemnización por despido', 'EARNING'),
+    ('F002', N'Vacaciones proporcionales', 'EARNING')
+) AS v (Code, Name, ConceptType)
+WHERE NOT EXISTS (
+    SELECT 1 FROM payroll.PayrollConcept AS pc
+    WHERE pc.CountryCode = c.CountryCode
+      AND pc.Code = v.Code
+);
+GO
