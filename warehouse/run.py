@@ -31,7 +31,7 @@ def main() -> None:
 
         # Si la última sentencia fue un SELECT, mostramos su resultado
         if con.description:
-            print(con.fetch_arrow_table().to_pandas().to_string(index=False))
+            print(con.to_arrow_table().to_pandas().to_string(index=False))
     finally:
         con.close()
 
