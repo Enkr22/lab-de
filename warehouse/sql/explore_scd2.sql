@@ -9,7 +9,8 @@ SELECT
     monthly_salary,
     valid_from,
     valid_to,
-    is_current
+    is_current,
+    history_truncated
 FROM gold.dim_employee
 WHERE employment_id = (
     SELECT employment_id

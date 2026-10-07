@@ -91,8 +91,12 @@ salary_versions AS (
 with_valid_from AS (
     SELECT
         sv.*,
-        -- La primera versión arranca en el alta, aunque haya sido a mitad de periodo
-        CASE WHEN sv.version = 1 THEN e.HireDate ELSE sv.first_period_start END AS valid_from
+        -- Versión 1: arranca en el alta (aunque sea a mitad de periodo), pero
+        -- NUNCA antes de la primera nómina que tenemos. Antes de esa fecha no hay
+        -- evidencia del sueldo: censura por la izquierda. No inventamos historia.
+        CASE WHEN sv.version = 1 THEN greatest(e.HireDate, sv.first_period_start)
+             ELSE sv.first_period_start
+        END AS valid_from
     FROM salary_versions AS sv
     JOIN silver.employment AS e ON e.EmploymentId = sv.employment_id
 )
@@ -116,7 +120,10 @@ SELECT
         LEAD(v.valid_from) OVER (PARTITION BY v.employment_id ORDER BY v.valid_from) - 1,
         DATE '9999-12-31'
     ) AS valid_to,
-    LEAD(v.valid_from) OVER (PARTITION BY v.employment_id ORDER BY v.valid_from) IS NULL AS is_current
+    LEAD(v.valid_from) OVER (PARTITION BY v.employment_id ORDER BY v.valid_from) IS NULL AS is_current,
+    -- True si la historia de sueldos de esta contratación empieza después del alta:
+    -- lo anterior existe, pero no tenemos con qué reconstruirlo.
+    min(v.valid_from) OVER (PARTITION BY v.employment_id) > e.HireDate AS history_truncated
 FROM with_valid_from AS v
 JOIN silver.employment AS e   ON e.EmploymentId = v.employment_id
 JOIN silver.employee   AS emp ON emp.EmployeeId = e.EmployeeId
@@ -127,6 +134,8 @@ SELECT
     (SELECT COUNT(*) FROM gold.dim_employee)                      AS employee_versions,
     (SELECT COUNT(DISTINCT employment_id) FROM gold.dim_employee) AS employments,
     (SELECT COUNT(*) FROM gold.dim_employee WHERE is_current)     AS current_versions,
+    (SELECT COUNT(DISTINCT employment_id) FROM gold.dim_employee
+     WHERE history_truncated)                                     AS truncated_histories,
     (SELECT COUNT(*) FROM gold.dim_date)                          AS dates,
     (SELECT COUNT(*) FROM gold.dim_concept)                       AS concepts,
     (SELECT COUNT(*) FROM gold.dim_country)                       AS countries;
