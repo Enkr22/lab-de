@@ -1,0 +1,10 @@
+# Conexión de dbt. Con DuckDB no hay credenciales: la base es un archivo.
+# Con Snowflake o SQL Server este archivo llevaría contraseñas y NUNCA
+# se subiría a git; se usarían variables de entorno.
+nomina:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data/dbt.duckdb
+      threads: 4

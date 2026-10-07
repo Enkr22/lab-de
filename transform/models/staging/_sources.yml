@@ -1,0 +1,20 @@
+version: 2
+
+# Las fuentes: lo que dbt NO construye, solo lee. Aquí, las cargas de bronze.
+# {name} se sustituye por el nombre de cada tabla, que coincide con su
+# carpeta en bronze.
+sources:
+  - name: bronze
+    description: "Cargas crudas del extractor incremental (Parquet, solo agregar)."
+    meta:
+      external_location: "read_parquet('../data/bronze/payroll/{name}/load_id=*/*.parquet', hive_partitioning = true)"
+    tables:
+      - name: country
+      - name: department
+      - name: employee
+      - name: employment
+      - name: payroll_concept
+      - name: payroll_period
+      - name: payroll_movement
+      - name: settlement
+      - name: settlement_line

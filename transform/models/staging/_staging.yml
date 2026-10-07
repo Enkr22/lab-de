@@ -1,0 +1,66 @@
+version: 2
+
+# Las pruebas de dbt: cada línea genera una consulta que debe regresar
+# CERO filas, la misma convención de tus pruebas de la fase 1.
+models:
+  - name: stg_country
+    columns:
+      - name: country_code
+        data_tests: [unique, not_null]
+
+  - name: stg_department
+    columns:
+      - name: department_id
+        data_tests: [unique, not_null]
+
+  - name: stg_employee
+    columns:
+      - name: employee_id
+        data_tests: [unique, not_null]
+
+  - name: stg_employment
+    columns:
+      - name: employment_id
+        data_tests: [unique, not_null]
+
+  - name: stg_payroll_concept
+    columns:
+      - name: concept_id
+        data_tests: [unique, not_null]
+      - name: concept_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['EARNING', 'DEDUCTION']
+
+  - name: stg_payroll_period
+    columns:
+      - name: period_id
+        data_tests: [unique, not_null]
+
+  - name: stg_payroll_movement
+    columns:
+      - name: movement_id
+        data_tests: [unique, not_null]
+      - name: concept_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_payroll_concept')
+                field: concept_id
+      - name: employment_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_employment')
+                field: employment_id
+
+  - name: stg_settlement
+    columns:
+      - name: settlement_id
+        data_tests: [unique, not_null]
+
+  - name: stg_settlement_line
+    columns:
+      - name: settlement_line_id
+        data_tests: [unique, not_null]
