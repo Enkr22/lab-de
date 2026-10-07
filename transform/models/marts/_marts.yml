@@ -1,0 +1,81 @@
+version: 2
+
+# Las descripciones aparecen en la documentación de dbt (dbt docs serve).
+models:
+  - name: dim_date
+    description: "Un renglón por día, de 2015 a 2026."
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: dim_country
+    description: "Países con su moneda y frecuencia de pago."
+    columns:
+      - name: country_code
+        data_tests: [unique, not_null]
+
+  - name: dim_concept
+    description: "Conceptos de nómina con su signo: +1 percepción, -1 deducción."
+    columns:
+      - name: concept_key
+        data_tests: [unique, not_null]
+
+  - name: dim_employee
+    description: "SCD tipo 2: una fila por versión del sueldo de cada contratación, reconstruida desde la nómina."
+    columns:
+      - name: employee_sk
+        data_tests: [unique, not_null]
+      - name: employment_id
+        description: "Cada contratación tiene exactamente una versión vigente."
+        data_tests:
+          - unique:
+              config:
+                where: "is_current"
+
+  - name: fct_payroll_movement
+    description: "Grano: un movimiento de nómina (contratación x periodo x concepto)."
+    columns:
+      - name: movement_id
+        data_tests: [unique, not_null]
+      - name: employee_sk
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_employee')
+                field: employee_sk
+      - name: concept_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_concept')
+                field: concept_key
+      - name: country_code
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_country')
+                field: country_code
+      - name: pay_date_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+  - name: fct_settlement
+    description: "Grano: un finiquito, con sus líneas pivoteadas a columnas."
+    columns:
+      - name: settlement_id
+        data_tests: [unique, not_null]
+      - name: employee_sk
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_employee')
+                field: employee_sk
+      - name: termination_date_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
