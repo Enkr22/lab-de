@@ -44,8 +44,10 @@ def get_engine():
         "mssql+pyodbc",
         username=os.environ["EXTRACT_USER"],
         password=os.environ["EXTRACT_PASSWORD"],
-        host="127.0.0.1",
-        port=1434,
+        # Por defecto, tu laptop (127.0.0.1:1434). Dentro de Docker, Airflow
+        # define EXTRACT_HOST=sqlserver y EXTRACT_PORT=1433.
+        host=os.environ.get("EXTRACT_HOST", "127.0.0.1"),
+        port=int(os.environ.get("EXTRACT_PORT", "1434")),
         database="LabNomina",
         query={
             "driver": "ODBC Driver 18 for SQL Server",

@@ -14,5 +14,32 @@ services:
     mem_limit: 4g
     restart: unless-stopped
 
+  airflow:
+    build:
+      context: .                            # la raíz del repo (filtrada por .dockerignore)
+      dockerfile: orchestration/Dockerfile
+    image: lab-airflow:3.3.2
+    container_name: lab_airflow
+    command: standalone                     # todo Airflow en un solo proceso: ideal para un lab
+    environment:
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/lab-de/orchestration/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: America/Mexico_City
+      # Sin login en la interfaz. Solo para un lab local; nunca en producción.
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "True"
+      # Dentro de la red de Docker, SQL Server se llama "sqlserver" y escucha en 1433
+      EXTRACT_HOST: sqlserver
+      EXTRACT_PORT: "1433"
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/opt/lab-de                       # el repo completo: código y data/
+      - airflow_home:/opt/airflow           # base de datos y logs de Airflow
+    depends_on:
+      - sqlserver
+    mem_limit: 3g
+    restart: unless-stopped
+
 volumes:
   sqldata:
+  airflow_home:
