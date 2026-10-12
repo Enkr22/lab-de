@@ -1,0 +1,4 @@
+# Archivos que se ejecutan dentro de Linux: siempre con finales de línea LF.
+# Un Dockerfile o script .sh con CRLF (Windows) truena dentro del contenedor.
+Dockerfile text eol=lf
+*.sh       text eol=lf

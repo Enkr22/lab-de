@@ -1,0 +1,10 @@
+# Lo que Docker NO necesita para construir la imagen.
+# Sin esto, mandaría tus GB de datos y tu .venv de Windows en cada build.
+.git
+.venv
+.env
+data
+transform/target
+transform/logs
+transform/dbt_packages
+**/__pycache__
