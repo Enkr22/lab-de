@@ -12,7 +12,7 @@ An end-to-end batch data pipeline over a synthetic, multi-country payroll system
 | Volume | ~4.9 M payroll movements · 30,000 employees · 30,746 employments · 10,444 settlements |
 | Payroll window | 2023–2025 (252 payroll periods) |
 | Data model | 2 fact tables, 4 dimensions, including an SCD Type 2 employee dimension |
-| Data quality | 42 dbt data tests, plus reconciliation tests between layers |
+| Data quality | 44 dbt data tests, plus reconciliation tests between layers |
 | Incremental extract | Full load ~70 s → incremental run with no changes < 1 s |
 | Orchestration | Daily Airflow DAG with retries; a full run takes ~25 s |
 
@@ -45,13 +45,14 @@ flowchart LR
 
 **Facts**
 
-- `fct_payroll_movement` — grain: one payroll movement (employment × period × concept). Joined point-in-time to the employee version in effect when it was paid. Exposes both the raw `amount` and a `signed_amount` (earnings positive, deductions negative).
+- `fct_payroll_movement` — grain: one payroll movement (employment × period × concept). Joined point-in-time to the employee version in effect when it was paid. Exposes both the raw `amount` and a `signed_amount` (earnings positive, deductions negative). Built incrementally (delete+insert on movement_id, with a 3-day overlap window).
 - `fct_settlement` — grain: one settlement (termination payout), with its lines pivoted into columns: vacation, indemnity, deductions and net amount.
 
 **Dimensions**
 
 - `dim_employee` — SCD Type 2: one row per salary version of each employment, with `valid_from`, `valid_to`, `is_current` and `history_truncated`.
 - `dim_concept`, `dim_country`, `dim_date`.
+- `snp_employment` — dbt snapshot: captures every change to employments on each run.
 
 ## Engineering decisions
 
@@ -127,7 +128,6 @@ These are the issues that taught the most, kept here on purpose.
 
 ## Roadmap
 
-- dbt snapshots to capture source changes as they happen, and incremental models for the large fact table.
 - A Power BI dashboard on top of the marts.
 - CI with GitHub Actions running `dbt build` on every pull request.
 - Change Data Capture as an alternative to watermark extraction.
