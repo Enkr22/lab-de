@@ -1,0 +1,19 @@
+version: 2
+
+# Snapshot: en cada corrida, dbt compara el estado actual de las contrataciones
+# contra lo que ya guardó. Si una fila trae un updated_at más nuevo, cierra la
+# versión anterior (dbt_valid_to) y agrega la nueva. Es una SCD tipo 2 que se
+# construye sola, corrida tras corrida, desde el día que existe el snapshot.
+snapshots:
+  - name: snp_employment
+    description: "Historia de cambios de las contrataciones, capturada en cada corrida."
+    relation: ref('stg_employment')
+    config:
+      schema: snapshots
+      unique_key: employment_id
+      strategy: timestamp
+      updated_at: updated_at
+      dbt_valid_to_current: "cast('9999-12-31' as timestamp)"
+    columns:
+      - name: dbt_scd_id
+        data_tests: [unique, not_null]
