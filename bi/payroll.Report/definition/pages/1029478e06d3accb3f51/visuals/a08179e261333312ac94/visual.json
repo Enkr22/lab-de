@@ -1,0 +1,56 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "a08179e261333312ac94",
+  "position": {
+    "x": 358,
+    "y": 168,
+    "z": 1,
+    "height": 177.5,
+    "width": 220,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_payroll_movement"
+                    }
+                  },
+                  "Property": "Monto neto"
+                }
+              },
+              "queryRef": "fct_payroll_movement.Monto neto",
+              "nativeQueryRef": "Monto neto"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_payroll_movement"
+                  }
+                },
+                "Property": "Monto neto"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

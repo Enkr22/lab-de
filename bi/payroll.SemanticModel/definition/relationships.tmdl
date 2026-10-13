@@ -1,0 +1,54 @@
+relationship 700eb21c-c70f-4d7b-8de2-d5b66ba5f563
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fct_payroll_movement.updated_at
+	toColumn: LocalDateTable_2d92d5c0-32d5-4fda-8988-719adc5dac60.Date
+
+relationship 7028ac15-fb77-495c-ba6e-721bbcfaa53a
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_employee.hire_date
+	toColumn: LocalDateTable_ad19fdb7-2766-4c51-9da1-6afa81c411cb.Date
+
+relationship d19ee013-2b6e-477e-998d-33650c5499aa
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_employee.termination_date
+	toColumn: LocalDateTable_0857ee8f-21d3-4678-a50d-73fd5c7c0b66.Date
+
+relationship 7035fcfb-0d22-4f03-9e0d-369de0b0f050
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_employee.valid_from
+	toColumn: LocalDateTable_363b1e18-e8a0-4e5f-bf90-22e20f54b49e.Date
+
+relationship 3b427b2b-00f6-4cf0-9044-e21cad76abd1
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_employee.valid_to
+	toColumn: LocalDateTable_73d5bd6d-4f14-4a6a-ad4e-0360afa5956b.Date
+
+relationship 96a98ad0-2be0-f2ce-76a3-ccf5c37571bf
+	fromColumn: fct_payroll_movement.employee_sk
+	toColumn: dim_employee.employee_sk
+
+relationship fcdeb805-3c7c-6734-fcd5-8f185cd36c12
+	fromColumn: fct_payroll_movement.concept_key
+	toColumn: dim_concept.concept_key
+
+relationship fd3cc56e-99ce-2ed9-2629-d26d99172f97
+	fromColumn: fct_payroll_movement.country_code
+	toColumn: dim_country.country_code
+
+relationship 8626d8f5-c561-95a6-8d32-2c2f41e455b0
+	fromColumn: fct_payroll_movement.pay_date_key
+	toColumn: dim_date.date_key
+
+relationship 16ba9370-7967-4db3-ea3f-f35336f4e141
+	crossFilteringBehavior: bothDirections
+	fromColumn: fct_settlement.employee_sk
+	toColumn: dim_employee.employee_sk
+
+relationship f1681c29-b34b-d48e-96bf-f9aebbd17134
+	fromColumn: fct_settlement.country_code
+	toColumn: dim_country.country_code
+
+relationship cb34a609-9f47-1258-4595-8bb54ce26ccc
+	fromColumn: fct_settlement.termination_date_key
+	toColumn: dim_date.date_key
+

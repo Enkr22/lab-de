@@ -1,0 +1,56 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "cb1e962509bd513f26d1",
+  "position": {
+    "x": 978,
+    "y": 168,
+    "z": 3,
+    "height": 177.5,
+    "width": 137.5,
+    "tabOrder": 3
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_settlement"
+                    }
+                  },
+                  "Property": "Finiquitos"
+                }
+              },
+              "queryRef": "fct_settlement.Finiquitos",
+              "nativeQueryRef": "Finiquitos"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_settlement"
+                  }
+                },
+                "Property": "Finiquitos"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

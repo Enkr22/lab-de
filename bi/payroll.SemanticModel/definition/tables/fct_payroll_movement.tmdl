@@ -1,0 +1,145 @@
+table fct_payroll_movement
+	lineageTag: 8d081632-66df-4bca-8415-934a34771c1b
+
+	measure 'Monto bruto' = SUM ( fct_payroll_movement[amount] )
+		lineageTag: 0a103a4e-004b-49ca-a8be-8763cc6f75e1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monto neto' =
+			
+			IF (
+			    HASONEVALUE ( dim_country[country_code] ),
+			    SUM ( fct_payroll_movement[signed_amount] )
+			)
+		lineageTag: 662e2d60-3992-4050-aaa8-36b33c6059ab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Percepciones =
+			
+			IF (
+			    HASONEVALUE ( dim_country[country_code] ),
+			    CALCULATE ( SUM ( fct_payroll_movement[amount] ), dim_concept[concept_type] = "EARNING" )
+			)
+		formatString: #,0.00
+		lineageTag: efbc74f3-b07f-47b1-b792-3ceffec0d366
+
+	measure Deducciones =
+			
+			IF (
+			    HASONEVALUE ( dim_country[country_code] ),
+			    CALCULATE ( SUM ( fct_payroll_movement[amount] ), dim_concept[concept_type] = "DEDUCTION" )
+			)
+		formatString: #,0.00
+		lineageTag: 57f8a2e1-a6f3-4972-8c11-2be7c899c218
+
+	measure 'Empleados pagados' = DISTINCTCOUNT ( fct_payroll_movement[employment_id] )
+		formatString: 0
+		lineageTag: d7888e89-09a9-4a8d-befe-441b916209cf
+
+	column movement_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 4556014d-da4f-4807-ba05-3f751ee61440
+		summarizeBy: sum
+		sourceColumn: movement_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_sk
+		dataType: string
+		lineageTag: ddf8a2c4-75ac-42a0-b116-6d63fadfcb01
+		summarizeBy: none
+		sourceColumn: employee_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column employment_id
+		dataType: int64
+		formatString: 0
+		lineageTag: cccc8906-184d-4165-974e-357079210b5f
+		summarizeBy: sum
+		sourceColumn: employment_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column concept_key
+		dataType: int64
+		formatString: 0
+		lineageTag: 67238164-9249-4695-9257-ab74adfd2f2d
+		summarizeBy: none
+		sourceColumn: concept_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_code
+		dataType: string
+		lineageTag: 4f94a7c9-b7e5-4f2b-93a1-9fcf137f22d5
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 4014f9f9-380c-4d35-8397-3b6bccbe1375
+		summarizeBy: sum
+		sourceColumn: period_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column pay_date_key
+		dataType: int64
+		formatString: 0
+		lineageTag: 23171c9b-6c7b-4c6c-ba0e-67092f176f94
+		summarizeBy: none
+		sourceColumn: pay_date_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column amount
+		dataType: double
+		lineageTag: 3bbd42d7-c954-4f6d-b147-ef78a62a0480
+		summarizeBy: sum
+		sourceColumn: amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column signed_amount
+		dataType: double
+		lineageTag: 83fe989d-7963-4a77-82d5-d5cdf802ac50
+		summarizeBy: sum
+		sourceColumn: signed_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column updated_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b78e35a8-0af8-4628-a102-36a3e53a7d12
+		summarizeBy: none
+		sourceColumn: updated_at
+
+		variation Variación
+			isDefault
+			relationship: 700eb21c-c70f-4d7b-8de2-d5b66ba5f563
+			defaultHierarchy: LocalDateTable_2d92d5c0-32d5-4fda-8988-719adc5dac60.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fct_payroll_movement = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents("C:\dev\personal\lab-de\data\serving\fct_payroll_movement.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,30 @@
+model Model
+	culture: es-MX
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["fct_payroll_movement","dim_concept","dim_country","dim_date","dim_employee","fct_settlement"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table fct_payroll_movement
+ref table DateTableTemplate_5cf80f73-ef5a-4691-8698-338a6941722a
+ref table LocalDateTable_2d92d5c0-32d5-4fda-8988-719adc5dac60
+ref table dim_concept
+ref table dim_country
+ref table dim_date
+ref table dim_employee
+ref table LocalDateTable_ad19fdb7-2766-4c51-9da1-6afa81c411cb
+ref table LocalDateTable_0857ee8f-21d3-4678-a50d-73fd5c7c0b66
+ref table LocalDateTable_363b1e18-e8a0-4e5f-bf90-22e20f54b49e
+ref table LocalDateTable_73d5bd6d-4f14-4a6a-ad4e-0360afa5956b
+ref table fct_settlement
+
+ref cultureInfo es-MX
+
