@@ -1,0 +1,63 @@
+table dim_concept
+	lineageTag: 303a3013-d8ec-4d9a-85c6-7a15c82ae88a
+
+	column concept_key
+		dataType: int64
+		formatString: 0
+		lineageTag: 47d3c0be-9e94-4137-b7d9-41c21aa83bfb
+		summarizeBy: none
+		sourceColumn: concept_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_code
+		dataType: string
+		lineageTag: a9dacec5-9aeb-4906-8d0f-2af8b7de50ad
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column concept_code
+		dataType: string
+		lineageTag: 38a832dc-2186-41db-92c4-1fcc2139a3e8
+		summarizeBy: none
+		sourceColumn: concept_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column concept_name
+		dataType: string
+		lineageTag: 95338e03-f66e-428b-b5d5-7100455b7986
+		summarizeBy: none
+		sourceColumn: concept_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column concept_type
+		dataType: string
+		lineageTag: c7c2d991-4eb8-4ec4-b918-57c760fc31e2
+		summarizeBy: none
+		sourceColumn: concept_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column sign
+		dataType: int64
+		formatString: 0
+		lineageTag: b2f03843-2845-41d9-8f98-9fd157b76040
+		summarizeBy: none
+		sourceColumn: sign
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_concept = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents("C:\dev\personal\lab-de\data\serving\dim_concept.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,180 @@
+table dim_employee
+	lineageTag: e13bb5e5-6b37-48d7-8109-e3f9f4bf59c5
+
+	column employee_sk
+		dataType: string
+		lineageTag: 3c6463e6-d337-4e14-97b6-e352d065e66d
+		summarizeBy: none
+		sourceColumn: employee_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column employment_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 37dfa82e-6152-4cea-b73a-46b775e257d5
+		summarizeBy: sum
+		sourceColumn: employment_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 0c71e201-1169-4a4b-9304-31ccaa748143
+		summarizeBy: sum
+		sourceColumn: employee_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column full_name
+		dataType: string
+		lineageTag: d619dd69-7dec-4c8d-a5d9-7133cd477a1b
+		summarizeBy: none
+		sourceColumn: full_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_code
+		dataType: string
+		lineageTag: 9c1041ef-69f9-4a2c-b8a0-beadd8c24836
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column department_name
+		dataType: string
+		lineageTag: d6d71110-8095-41f7-a01a-fe42b7839628
+		summarizeBy: none
+		sourceColumn: department_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_title
+		dataType: string
+		lineageTag: 046ac181-91f2-45dc-94c2-7b625f2ead01
+		summarizeBy: none
+		sourceColumn: job_title
+
+		annotation SummarizationSetBy = Automatic
+
+	column hire_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2f658f76-9251-46cc-89a7-5cdcf7912d27
+		summarizeBy: none
+		sourceColumn: hire_date
+
+		variation Variación
+			isDefault
+			relationship: 7028ac15-fb77-495c-ba6e-721bbcfaa53a
+			defaultHierarchy: LocalDateTable_ad19fdb7-2766-4c51-9da1-6afa81c411cb.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column termination_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 060446c3-efe5-4c71-b0f2-5ef09e9a377c
+		summarizeBy: none
+		sourceColumn: termination_date
+
+		variation Variación
+			isDefault
+			relationship: d19ee013-2b6e-477e-998d-33650c5499aa
+			defaultHierarchy: LocalDateTable_0857ee8f-21d3-4678-a50d-73fd5c7c0b66.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column termination_reason
+		dataType: string
+		lineageTag: eb0e89bb-9767-4ce2-8ba2-a863f9312259
+		summarizeBy: none
+		sourceColumn: termination_reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column version
+		dataType: int64
+		formatString: 0
+		lineageTag: eb014ff8-2fb1-4005-a3f3-2c06fc382a26
+		summarizeBy: sum
+		sourceColumn: version
+
+		annotation SummarizationSetBy = Automatic
+
+	column monthly_salary
+		dataType: double
+		lineageTag: 4d64562e-1aa0-4370-be8a-23e36f31f575
+		summarizeBy: sum
+		sourceColumn: monthly_salary
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column valid_from
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: da250083-eaf9-43c8-a0c7-99fc4c7a4952
+		summarizeBy: none
+		sourceColumn: valid_from
+
+		variation Variación
+			isDefault
+			relationship: 7035fcfb-0d22-4f03-9e0d-369de0b0f050
+			defaultHierarchy: LocalDateTable_363b1e18-e8a0-4e5f-bf90-22e20f54b49e.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column valid_to
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 93faebed-c570-4be1-a754-ad135934a0e7
+		summarizeBy: none
+		sourceColumn: valid_to
+
+		variation Variación
+			isDefault
+			relationship: 3b427b2b-00f6-4cf0-9044-e21cad76abd1
+			defaultHierarchy: LocalDateTable_73d5bd6d-4f14-4a6a-ad4e-0360afa5956b.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column is_current
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 97ff5386-f3a1-430a-a4ef-7b3dae41379d
+		summarizeBy: none
+		sourceColumn: is_current
+
+		annotation SummarizationSetBy = Automatic
+
+	column history_truncated
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 4ca8aabb-ac5e-418e-ac5d-1102e2b05b23
+		summarizeBy: none
+		sourceColumn: history_truncated
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_employee = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents("C:\dev\personal\lab-de\data\serving\dim_employee.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "payroll"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "fea0a891-4013-46f7-bcd4-358ad0828769"
+  }
+}

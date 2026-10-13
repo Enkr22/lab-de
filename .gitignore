@@ -9,3 +9,5 @@ transform/target/
 transform/logs/
 transform/dbt_packages/
 transform/.user.yml
+**/.pbi/localSettings.json
+**/.pbi/cache.abf

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "f3763feefb4fd0802147",
+  "position": {
+    "x": 934,
+    "y": 486,
+    "z": 5,
+    "height": 422,
+    "width": 838,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_concept"
+                    }
+                  },
+                  "Property": "concept_name"
+                }
+              },
+              "queryRef": "dim_concept.concept_name",
+              "nativeQueryRef": "concept_name",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_payroll_movement"
+                    }
+                  },
+                  "Property": "Monto neto"
+                }
+              },
+              "queryRef": "fct_payroll_movement.Monto neto",
+              "nativeQueryRef": "Monto neto"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_payroll_movement"
+                  }
+                },
+                "Property": "Monto neto"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

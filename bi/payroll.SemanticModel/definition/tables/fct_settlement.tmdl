@@ -1,0 +1,135 @@
+table fct_settlement
+	lineageTag: ad4600dc-c7c2-432b-ab2d-af0795e21dbc
+
+	measure Finiquitos = COUNTROWS ( fct_settlement )
+		formatString: 0
+		lineageTag: 8c2f5778-bce1-401a-97b2-2dec3aca8478
+
+	measure 'Indemnizaciones pagadas' =
+			
+			IF (
+			    HASONEVALUE ( dim_country[country_code] ),
+			    CALCULATE ( SUM ( fct_settlement[indemnity_amount] ), fct_settlement[status] = "PAID" )
+			)
+		lineageTag: 76274bb7-f1dd-4008-add0-76a8a05ad4a1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column settlement_id
+		dataType: int64
+		formatString: 0
+		lineageTag: e4b73f53-3021-41eb-8ec8-8e5077f4b707
+		summarizeBy: sum
+		sourceColumn: settlement_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_sk
+		dataType: string
+		lineageTag: 912807f9-d411-4d52-a6f3-2afb45f784c2
+		summarizeBy: none
+		sourceColumn: employee_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column employment_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a114dea-1385-4d86-a02b-a61d11750cf9
+		summarizeBy: sum
+		sourceColumn: employment_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_code
+		dataType: string
+		lineageTag: 31bb4b81-9fad-4068-ad98-57ce317f626b
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column termination_date_key
+		dataType: int64
+		formatString: 0
+		lineageTag: 00b7fbc2-5f61-4230-82c6-60bd9af57abc
+		summarizeBy: none
+		sourceColumn: termination_date_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column settlement_date_key
+		dataType: int64
+		formatString: 0
+		lineageTag: bcba0fbf-8433-4953-8f8d-e3b937e1e5af
+		summarizeBy: sum
+		sourceColumn: settlement_date_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column termination_reason
+		dataType: string
+		lineageTag: a54cc72c-b3e1-4436-b87e-52bdbac9748f
+		summarizeBy: none
+		sourceColumn: termination_reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: ea734af1-ed90-4d96-9f5b-74b5518fc600
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column vacation_amount
+		dataType: double
+		lineageTag: e4ca52e4-6165-4b2d-8cce-eb17ac2edffb
+		summarizeBy: sum
+		sourceColumn: vacation_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column indemnity_amount
+		dataType: double
+		lineageTag: efe52d02-1baa-4ab5-abe9-72c13ac0dc00
+		summarizeBy: sum
+		sourceColumn: indemnity_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column deductions_amount
+		dataType: double
+		lineageTag: abca7483-fab2-481a-8f8f-9e0d88c24952
+		summarizeBy: sum
+		sourceColumn: deductions_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column net_amount
+		dataType: double
+		lineageTag: 1c94bf65-ef4c-44e9-8073-e9b68cc23f9b
+		summarizeBy: sum
+		sourceColumn: net_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fct_settlement = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents("C:\dev\personal\lab-de\data\serving\fct_settlement.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table
+

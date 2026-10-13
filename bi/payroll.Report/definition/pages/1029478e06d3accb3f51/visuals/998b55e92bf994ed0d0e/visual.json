@@ -1,0 +1,66 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "998b55e92bf994ed0d0e",
+  "position": {
+    "x": 1260,
+    "y": 168,
+    "z": 6,
+    "height": 202,
+    "width": 426,
+    "tabOrder": 6
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_settlement"
+                    }
+                  },
+                  "Property": "termination_reason"
+                }
+              },
+              "queryRef": "fct_settlement.termination_reason",
+              "nativeQueryRef": "termination_reason"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_settlement"
+                    }
+                  },
+                  "Property": "Finiquitos"
+                }
+              },
+              "queryRef": "fct_settlement.Finiquitos",
+              "nativeQueryRef": "Finiquitos"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_settlement"
+                    }
+                  },
+                  "Property": "Indemnizaciones pagadas"
+                }
+              },
+              "queryRef": "fct_settlement.Indemnizaciones pagadas",
+              "nativeQueryRef": "Indemnizaciones pagadas"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

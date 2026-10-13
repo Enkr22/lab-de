@@ -53,6 +53,10 @@ flowchart LR
 - `dim_employee` — SCD Type 2: one row per salary version of each employment, with `valid_from`, `valid_to`, `is_current` and `history_truncated`.
 - `dim_concept`, `dim_country`, `dim_date`.
 
+## Dashboard
+
+![Payroll dashboard](docs/dashboard.png)
+
 ## Engineering decisions
 
 **Incremental extraction with at-least-once delivery.** Each table is extracted by its `UpdatedAt` watermark. The upper bound is frozen before reading, loads are written to a hidden `_inprogress_` folder and published with a single rename, and the watermark only advances after a successful publish. A failed run repeats its window instead of skipping it: duplicates are possible and handled downstream; gaps are not.
