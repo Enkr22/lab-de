@@ -168,6 +168,14 @@ table dim_employee
 
 		annotation SummarizationSetBy = Automatic
 
+	column contract_type
+		dataType: string
+		lineageTag: 486d7f13-c67c-4ddf-8941-52933fc7f47b
+		summarizeBy: none
+		sourceColumn: contract_type
+
+		annotation SummarizationSetBy = Automatic
+
 	partition dim_employee = m
 		mode: import
 		source =

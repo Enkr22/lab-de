@@ -136,7 +136,7 @@ def extract_table(conn, contract: TableContract, low: str, load_id: str) -> tupl
 
 def main() -> None:
     full = "--full" in sys.argv
-        # --table payroll.Employment: re-extrae SOLO esa tabla desde cero (backfill)
+# --table payroll.Employment: re-extrae SOLO esa tabla desde cero (backfill)
     only = sys.argv[sys.argv.index("--table") + 1] if "--table" in sys.argv else None
     if only and only not in [t.source for t in TABLES]:
         sys.exit(f"Tabla desconocida: {only}")
