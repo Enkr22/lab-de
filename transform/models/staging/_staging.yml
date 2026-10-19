@@ -22,7 +22,16 @@ models:
     columns:
       - name: employment_id
         data_tests: [unique, not_null]
-
+      - name: contract_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['INDEFINITE', 'TEMPORARY']
+              config:
+                severity: warn
+          - not_null:
+              config:
+                severity: warn  
   - name: stg_payroll_concept
     columns:
       - name: concept_id

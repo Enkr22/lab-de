@@ -25,6 +25,9 @@ models:
     columns:
       - name: employee_sk
         data_tests: [unique, not_null]
+      - name: contract_type
+        description: "Tipo de contrato. UNKNOWN cuando el origen no lo trae (error de captura)."
+        data_tests: [not_null]
       - name: employment_id
         description: "Cada contratación tiene exactamente una versión vigente."
         data_tests:

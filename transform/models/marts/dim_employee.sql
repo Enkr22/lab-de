@@ -63,6 +63,7 @@ select
     e.hire_date,
     e.termination_date,
     e.termination_reason,
+    coalesce(e.contract_type, 'UNKNOWN') as contract_type,
     v.version,
     v.monthly_salary,
     v.valid_from,
