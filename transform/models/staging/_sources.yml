@@ -7,7 +7,7 @@ sources:
   - name: bronze
     description: "Cargas crudas del extractor incremental (Parquet, solo agregar)."
     meta:
-      external_location: "read_parquet('../data/bronze/payroll/{name}/load_id=*/*.parquet', hive_partitioning = true)"
+      external_location: "read_parquet('../data/bronze/payroll/{name}/load_id=*/*.parquet', hive_partitioning = true, union_by_name = true)"
     tables:
       - name: country
       - name: department

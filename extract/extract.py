@@ -136,19 +136,26 @@ def extract_table(conn, contract: TableContract, low: str, load_id: str) -> tupl
 
 def main() -> None:
     full = "--full" in sys.argv
+        # --table payroll.Employment: re-extrae SOLO esa tabla desde cero (backfill)
+    only = sys.argv[sys.argv.index("--table") + 1] if "--table" in sys.argv else None
+    if only and only not in [t.source for t in TABLES]:
+        sys.exit(f"Tabla desconocida: {only}")
     # Un mismo load_id para todas las tablas de esta corrida, en UTC
     load_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     watermarks = {} if full else load_watermarks()
 
-    print(f"Corrida {load_id}   modo: {'FULL' if full else 'INCREMENTAL'}\n")
+    mode = "FULL" if full else f"BACKFILL {only}" if only else "INCREMENTAL"
+    print(f"Corrida {load_id}   modo: {mode}\n")
     print(f"{'Tabla':<26}{'Filas':>12}{'Segundos':>10}   Watermark")
 
     engine = get_engine()
     total_start = time.perf_counter()
     with engine.connect() as conn:
         for contract in TABLES:
+            if only and contract.source != only:
+                continue  # backfill: solo la tabla pedida
             start = time.perf_counter()
-            low = watermarks.get(contract.source, EPOCH)
+            low = EPOCH if only else watermarks.get(contract.source, EPOCH)
             rows, high = extract_table(conn, contract, low, load_id)
 
             # 5. El watermark solo avanza DESPUÉS de publicar la carga. Si algo

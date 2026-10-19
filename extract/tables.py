@@ -63,7 +63,7 @@ TABLES = [
         optional("BirthDate", DATE),
         *AUDIT,
     ])),
-    TableContract("payroll.Employment", "employment", pa.schema([
+        TableContract("payroll.Employment", "employment", pa.schema([
         required("EmploymentId", INT),
         required("EmployeeId", INT),
         required("DepartmentId", INT),
@@ -72,6 +72,7 @@ TABLES = [
         required("HireDate", DATE),
         optional("TerminationDate", DATE),
         optional("TerminationReason", TEXT),
+        optional("ContractType", TEXT),      # DATA-1423
         *AUDIT,
     ])),
     TableContract("payroll.PayrollConcept", "payroll_concept", pa.schema([

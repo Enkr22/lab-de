@@ -9,6 +9,7 @@ select
     HireDate          as hire_date,
     TerminationDate   as termination_date,
     TerminationReason as termination_reason,
+    upper(trim(ContractType)) as contract_type,  -- formato: mayúsculas, sin espacios
     CreatedAt         as created_at,
     UpdatedAt         as updated_at,
     load_id           as _load_id
