@@ -10,6 +10,11 @@
 
     Simplificaciones: un periodo con cualquier día activo se paga completo
     (sin prorrateo por días) y los aumentos aplican cada 1 de enero.
+
+    Regla de oro de esta etapa: toda expresión aleatoria que participa en
+    un join incluye columnas de TODAS las tablas involucradas en su
+    CHECKSUM. Así el optimizador no puede evaluarla antes del join (una
+    sola tirada por regla) en lugar de una tirada por fila combinada.
 */
 
 USE LabNomina;
@@ -98,7 +103,7 @@ INSERT INTO #SalaryEvent (EmploymentId, EventDate, Pct)
 SELECT
     e.EmploymentId,
     y.EventDate,
-    rr.MinPct + (rr.MaxPct - rr.MinPct) * RAND(CHECKSUM(NEWID()))
+    rr.MinPct + (rr.MaxPct - rr.MinPct) * RAND(CHECKSUM(NEWID(), e.EmploymentId, y.EventDate))
 FROM #Emp AS e
 JOIN #RaiseRule AS rr ON rr.CountryCode = e.CountryCode
 CROSS JOIN (
@@ -107,7 +112,7 @@ CROSS JOIN (
 ) AS y
 WHERE e.HireDate < y.EventDate
   AND (e.TerminationDate IS NULL OR e.TerminationDate >= y.EventDate)
-  AND RAND(CHECKSUM(NEWID())) < rr.Probability;
+  AND RAND(CHECKSUM(NEWID(), e.EmploymentId, y.EventDate)) < rr.Probability;
 
 -- La historia como intervalos de vigencia. SQL no tiene PRODUCT(), así que
 -- el aumento acumulado se calcula como EXP(SUM(LOG(1 + pct))).
@@ -156,12 +161,12 @@ DROP TABLE IF EXISTS #EmpRule;
 SELECT
     e.EmploymentId,
     r.RuleId,
-    r.MinValue + (r.MaxValue - r.MinValue) * RAND(CHECKSUM(NEWID())) AS RuleValue
+    r.MinValue + (r.MaxValue - r.MinValue) * RAND(CHECKSUM(NEWID(), e.EmploymentId, r.RuleId)) AS RuleValue
 INTO #EmpRule
 FROM #Emp AS e
 JOIN gen.ConceptRule AS r ON r.CountryCode = e.CountryCode
 WHERE r.Scope = 'EMPLOYMENT'
-  AND RAND(CHECKSUM(NEWID())) < r.Probability;
+  AND RAND(CHECKSUM(NEWID(), e.EmploymentId, r.RuleId)) < r.Probability;
 
 /* ---------- 7. Primera pasada: todas las reglas excepto PCT_EARNINGS ---------- */
 -- La hora de proceso se materializa aquí, una sola vez por fila, para que
@@ -173,7 +178,7 @@ SELECT
     pc.ConceptId,
     pc.ConceptType,
     CAST(a.Amount AS DECIMAL(18,2)) AS Amount,
-    DATEADD(SECOND, 64800 + CAST(RAND(CHECKSUM(NEWID())) * 7200 AS INT),
+    DATEADD(SECOND, 64800 + CAST(RAND(CHECKSUM(NEWID(), ep.EmploymentId, ep.PeriodId, r.RuleId)) * 7200 AS INT),
             CAST(ep.PayDate AS DATETIME2(3))) AS ProcessedAt
 INTO #Mov
 FROM #EmpPeriod AS ep
@@ -187,7 +192,7 @@ LEFT JOIN #EmpRule AS er
 CROSS APPLY (
     SELECT CASE
         WHEN r.Scope = 'EMPLOYMENT' THEN er.RuleValue
-        ELSE r.MinValue + (r.MaxValue - r.MinValue) * RAND(CHECKSUM(NEWID()))
+        ELSE r.MinValue + (r.MaxValue - r.MinValue) * RAND(CHECKSUM(NEWID(), ep.EmploymentId, ep.PeriodId, r.RuleId))
     END AS RuleValue
 ) AS v
 CROSS APPLY (
@@ -205,7 +210,7 @@ WHERE r.Method <> 'PCT_EARNINGS'
   AND (r.SalaryTo   IS NULL OR ep.Salary <= r.SalaryTo)
   AND (
         (r.Scope = 'EMPLOYMENT' AND er.RuleId IS NOT NULL)
-     OR (r.Scope = 'PERIOD' AND RAND(CHECKSUM(NEWID())) < r.Probability)
+     OR (r.Scope = 'PERIOD' AND RAND(CHECKSUM(NEWID(), ep.EmploymentId, ep.PeriodId, r.RuleId)) < r.Probability)
   );
 
 /* ---------- 8. Segunda pasada: PCT_EARNINGS sobre las percepciones del periodo ---------- */
@@ -216,9 +221,9 @@ SELECT
     ern.PeriodId,
     pc.ConceptId,
     pc.ConceptType,
-    CAST(ern.Earnings * (r.MinValue + (r.MaxValue - r.MinValue) * RAND(CHECKSUM(NEWID())))
+    CAST(ern.Earnings * (r.MinValue + (r.MaxValue - r.MinValue) * RAND(CHECKSUM(NEWID(), ern.EmploymentId, ern.PeriodId, r.RuleId)))
          AS DECIMAL(18,2)),
-    DATEADD(SECOND, 64800 + CAST(RAND(CHECKSUM(NEWID())) * 7200 AS INT),
+    DATEADD(SECOND, 64800 + CAST(RAND(CHECKSUM(NEWID(), ern.EmploymentId, ern.PeriodId, r.RuleId)) * 7200 AS INT),
             CAST(ep.PayDate AS DATETIME2(3)))
 FROM (
     SELECT EmploymentId, PeriodId, SUM(Amount) AS Earnings
@@ -237,7 +242,7 @@ JOIN payroll.PayrollConcept AS pc
    AND pc.Code = r.ConceptCode
 WHERE (r.SalaryFrom IS NULL OR ep.Salary >= r.SalaryFrom)
   AND (r.SalaryTo   IS NULL OR ep.Salary <= r.SalaryTo)
-  AND RAND(CHECKSUM(NEWID())) < r.Probability;
+  AND RAND(CHECKSUM(NEWID(), ern.EmploymentId, ern.PeriodId, r.RuleId)) < r.Probability;
 
 /* ---------- 9. Cargar los movimientos ---------- */
 -- TABLOCK sobre una tabla vacía en modelo SIMPLE permite registro mínimo

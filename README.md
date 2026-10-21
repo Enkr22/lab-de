@@ -1,6 +1,6 @@
 # LATAM Payroll Data Pipeline
 
-An end-to-end batch data pipeline over a synthetic, multi-country payroll system: **SQL Server → incremental extraction to Parquet → dbt on DuckDB (staging and a star schema with SCD Type 2) → orchestrated by Airflow 3**, all running locally in Docker.
+An end-to-end batch data pipeline over a synthetic, multi-country payroll system: **SQL Server → incremental extraction to Parquet → dbt on DuckDB (staging, snapshot and a star schema with SCD Type 2) → Power BI**, orchestrated by Airflow 3 and running locally in Docker.
 
 > All data in this repository is **synthetic**, generated with set-based T-SQL. No real payroll or personal data is used. Payroll rules (taxes, contributions, bonuses) are illustrative, not legally accurate calculations.
 
@@ -11,10 +11,10 @@ An end-to-end batch data pipeline over a synthetic, multi-country payroll system
 | Countries | 5 (MX, CO biweekly · AR, PY, UY monthly), each in its own currency |
 | Volume | ~4.9 M payroll movements · 30,000 employees · 30,746 employments · 10,444 settlements |
 | Payroll window | 2023–2025 (252 payroll periods) |
-| Data model | 2 fact tables, 4 dimensions, including an SCD Type 2 employee dimension |
-| Data quality | 42 dbt data tests, plus reconciliation tests between layers |
+| Data model | 2 fact tables, 4 dimensions (one SCD Type 2) and a dbt snapshot |
+| Data quality | 47 dbt data tests, including reconciliation tests between layers |
 | Incremental extract | Full load ~70 s → incremental run with no changes < 1 s |
-| Orchestration | Daily Airflow DAG with retries; a full run takes ~25 s |
+| Orchestration | Daily Airflow DAG (extract → dbt build → BI export) with retries; a full run takes ~45 s |
 
 ## Architecture
 
@@ -24,13 +24,17 @@ flowchart LR
     EX["extract.py<br/>incremental by watermark"]
     BR["Bronze<br/>Parquet, append-only"]
     STG["dbt staging<br/>latest version per key"]
+    SNP["dbt snapshot<br/>observed history"]
     MRT["dbt marts<br/>star schema + SCD2"]
-    BI["Analytics / BI"]
+    SRV["export_for_bi.py<br/>typed Parquet"]
+    PBI["Power BI<br/>dashboard"]
     AF{{"Airflow 3<br/>daily DAG"}}
 
-    SQL --> EX --> BR --> STG --> MRT --> BI
+    SQL --> EX --> BR --> STG --> MRT --> SRV --> PBI
+    STG --> SNP
     AF -. "task 1" .-> EX
     AF -. "task 2: dbt build" .-> STG
+    AF -. "task 3" .-> SRV
 ```
 
 | Layer | Technology | Responsibility |
@@ -38,24 +42,32 @@ flowchart LR
 | Source | SQL Server 2022 in Docker | Normalized OLTP schema (9 tables) with constraints and audit columns |
 | Ingestion | Python, pandas, pyarrow, SQLAlchemy | Incremental extraction with explicit schema contracts |
 | Bronze | Parquet files | Immutable, append-only history of every load |
-| Transformation | dbt + DuckDB | Staging (deduplication, naming) and marts (dimensional model) |
+| Transformation | dbt + DuckDB | Staging (deduplication, naming, formatting), snapshot and marts (dimensional model) |
+| Serving | Python + DuckDB | Typed Parquet export for BI, decoupled from the dbt database |
+| BI | Power BI (PBIP) | Dashboard; semantic model and report versioned as text |
 | Orchestration | Airflow 3.3 in Docker | Scheduling, dependencies, retries |
 
 ## Data model
 
 **Facts**
 
-- `fct_payroll_movement` — grain: one payroll movement (employment × period × concept). Joined point-in-time to the employee version in effect when it was paid. Exposes both the raw `amount` and a `signed_amount` (earnings positive, deductions negative).
+- `fct_payroll_movement` — grain: one payroll movement (employment × period × concept). Joined point-in-time to the employee version in effect when it was paid. Exposes both the raw `amount` and a `signed_amount` (earnings positive, deductions negative). Incremental: `delete+insert` with a 3-day lookback.
 - `fct_settlement` — grain: one settlement (termination payout), with its lines pivoted into columns: vacation, indemnity, deductions and net amount.
 
 **Dimensions**
 
-- `dim_employee` — SCD Type 2: one row per salary version of each employment, with `valid_from`, `valid_to`, `is_current` and `history_truncated`.
+- `dim_employee` — SCD Type 2: one row per salary version of each employment, with `valid_from`, `valid_to`, `is_current` and `history_truncated`, plus descriptive attributes such as `contract_type`.
 - `dim_concept`, `dim_country`, `dim_date`.
+
+**Snapshot**
+
+- `snp_employment` — dbt snapshot (timestamp strategy): the history of employment changes as they are observed, from the first run onwards.
 
 ## Dashboard
 
 ![Payroll dashboard](docs/dashboard.png)
+
+Power BI report over the marts: net pay, employees paid and settlements per country (in local currency), filterable by country and contract type.
 
 ## Engineering decisions
 
@@ -65,9 +77,15 @@ flowchart LR
 
 **Explicit schema contracts.** Every source table has a declared Arrow schema (`extract/tables.py`). Money travels as `decimal128(18, 2)` from source to marts; nullability is enforced; a value that does not fit its contract fails the load loudly instead of being silently converted.
 
+**Schema changes handled explicitly.** A new source column is not picked up silently: it is added to the contract, older Parquet files are read by column name, and existing rows are backfilled for that table only (`extract.py --table`) instead of re-extracting everything.
+
 **SCD Type 2 rebuilt from transactions.** The source overwrites salaries in place, as many real systems do. Salary history is reconstructed from the base-salary payroll movements with a gaps-and-islands approach, and facts are joined to the version in effect at payment time.
 
 **Honest about missing history.** For employees hired before the payroll window, earlier salary changes left no evidence. Instead of extrapolating, the first version starts at the first observed payroll and the record is flagged with `history_truncated` (17,876 employments).
+
+**Captured history next to reconstructed history.** A dbt snapshot records employment changes as they are observed from now on, complementing the SCD2 rebuilt from transactions.
+
+**Serving layer decoupled from the warehouse.** Power BI reads a Parquet export, never the dbt database: DuckDB allows a single writer, so a BI tool holding the file open would block the nightly build. The export is also a type contract: oversized integers and decimals are cast to types BI tools support, and the cast fails loudly if a value does not fit.
 
 **Idempotency everywhere.** Every SQL script, extraction and dbt model can be re-run without duplicating data.
 
@@ -83,30 +101,34 @@ These are the issues that taught the most, kept here on purpose.
 2. **Silent decimal-to-float conversion.** `pandas.read_sql` converts `DECIMAL` to `float64` by default. Totals still matched to the cent at this volume, which made the bug easy to miss. Fixed by disabling the coercion and enforcing types through schema contracts. The same issue appeared again at the DuckDB-to-pandas boundary and was fixed there too.
 3. **An SCD2 that invented history.** The first version of `dim_employee` claimed salaries had been in effect years before there was any evidence of them. Diagnosed as left censoring and fixed as described above.
 4. **Simulated source outage.** With the source database down, the extraction task retried twice and failed; the dbt task was marked `upstream_failed` and never ran, so no mart was built on incomplete data. After restoring the source, only the failed task and its downstream were cleared and re-run on the same DAG run.
+5. **A new source column the pipeline could not see.** A simulated application release added `ContractType` and back-filled it with direct `UPDATE`s that did not touch `UpdatedAt`, so the watermark extractor would never have picked up existing rows. On top of that, 31 values arrived as `'temporary '` (lowercase, trailing space): invisible in SQL Server, whose case-insensitive collation and trailing-space comparison grouped them with `TEMPORARY`, but distinct in DuckDB. Fixed with a single-table backfill, normalization in staging, `warn`-level tests for known source defects, and a one-off backfill of the snapshot's current versions only, leaving closed versions as unknown instead of inventing history. The application team now updates `UpdatedAt` in every data fix and added a CHECK constraint. Lesson: anything that detects change through `UpdatedAt` is blind to changes that bypass it; Change Data Capture is the structural fix.
 
 ## Repository structure
 
 ```
 .
 ├── docker-compose.yml        SQL Server + Airflow
-├── sql/                      Source schema and synthetic data generator (T-SQL)
+├── sql/                      Source schema, synthetic data generator and simulated app releases (T-SQL)
 ├── tests/                    SQL data tests for the generator
 ├── extract/                  Incremental extractor and schema contracts
 ├── warehouse/                Hand-written silver/gold layer (reference, pre-dbt)
-├── transform/                dbt project: staging and marts
-└── orchestration/            Airflow image and DAG
+├── transform/                dbt project: staging, snapshot and marts
+├── serving/                  Typed Parquet export for BI
+├── orchestration/            Airflow image and DAG
+├── bi/                       Power BI project (PBIP: model and report as text)
+└── docs/                     Images for this README
 ```
 
 ## Running it locally
 
-**Prerequisites:** a Docker runtime (developed with Rancher Desktop), Python 3.13, and the Microsoft ODBC Driver 18 for SQL Server.
+**Prerequisites:** a Docker runtime (developed with Rancher Desktop), Python 3.13, the Microsoft ODBC Driver 18 for SQL Server and, for the dashboard, Power BI Desktop.
 
 1. **Configure secrets.** Copy `.env.example` to `.env` and set the passwords.
 2. **Start the source database.**
    ```bash
    docker compose up -d sqlserver
    ```
-3. **Build and populate the source.** Run `sql/00_*` through `sql/07_*` in order (SSMS or `sqlcmd`, port `1434`).
+3. **Build and populate the source.** Run `sql/00_*` through `sql/09_*` in order (SSMS or `sqlcmd`, port `1434`). Scripts `08` and `09` simulate an application release and its data fix (see problem 5 above); the current pipeline expects the column they add.
 4. **Create the read-only extraction user**, with the password from your `.env`:
    ```sql
    CREATE LOGIN extractor WITH PASSWORD = '<your-password>';
@@ -120,7 +142,8 @@ These are the issues that taught the most, kept here on purpose.
    # activate the environment, then:
    pip install -r requirements.txt
    python extract/extract.py
-   cd transform && dbt build
+   cd transform && dbt build && cd ..
+   python serving/export_for_bi.py
    ```
 6. **Or let Airflow run it.**
    ```bash
@@ -128,15 +151,16 @@ These are the issues that taught the most, kept here on purpose.
    docker compose up -d
    ```
    Open `http://localhost:8080`, unpause `payroll_pipeline` and trigger it.
+7. **Open the dashboard.** Open `bi/payroll.pbip` in Power BI Desktop and refresh. The Parquet sources point to `C:\dev\personal\lab-de\data\serving\`; if you cloned the repository elsewhere, update the paths in *Transform data*.
 
 ## Roadmap
 
-- dbt snapshots to capture source changes as they happen, and incremental models for the large fact table.
-- A Power BI dashboard on top of the marts.
-- CI with GitHub Actions running `dbt build` on every pull request.
+- CI with GitHub Actions running `dbt build` on every pull request, plus branch protection on `main`.
+- An absence (time-off) data mart, with date ranges expanded to a daily grain.
 - Change Data Capture as an alternative to watermark extraction.
+- A PySpark version of the transformation layer, to compare approaches at larger volumes.
 
 ## Author
 
 **José Emmanuel Carrillo Ruiz** — Backend/data developer working on multi-country LATAM payroll platforms, building toward data engineering.
-[LinkedIn](https://www.linkedin.com/in/emmanuel-carrillo-ruiz-43b2b9334?utm_source=share_via&utm_content=profile&utm_medium=member_android)
+[LinkedIn](https://www.linkedin.com/in/emmanuel-carrillo-ruiz-43b2b9334)
