@@ -75,3 +75,23 @@ models:
       - name: settlement_line_id
         data_tests: [unique, not_null]
         
+  - name: stg_absence
+    columns:
+      - name: absence_id
+        data_tests: [unique, not_null]
+      - name: employment_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_employment')
+                field: employment_id
+      - name: absence_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['VACATION', 'SICK_LEAVE', 'UNJUSTIFIED']
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['APPROVED', 'CANCELLED']
