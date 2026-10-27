@@ -82,7 +82,7 @@ models:
               arguments:
                 to: ref('dim_date')
                 field: date_key
-                
+
   - name: fct_absence_day
     description: "Grano: un renglón por contratación por día de ausencia, con las reglas de RH de DATA-1425."
     columns:

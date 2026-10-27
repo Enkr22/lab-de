@@ -84,9 +84,11 @@ table fct_absence_day
 		mode: import
 		source =
 				let
-				    Origen = Parquet.Document(File.Contents("   C:\dev\personal\lab-de\data\serving\fct_absence_day.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				    Origen = Parquet.Document(File.Contents("C:\dev\personal\lab-de\data\serving\fct_absence_day.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
 				in
 				    Origen
 
 	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navegación
 
