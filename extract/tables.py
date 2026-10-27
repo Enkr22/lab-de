@@ -113,4 +113,13 @@ TABLES = [
         required("Amount", MONEY),
         *AUDIT,
     ])),
+    TableContract("payroll.Absence", "absence", pa.schema([
+        required("AbsenceId", INT),
+        required("EmploymentId", INT),
+        required("AbsenceType", TEXT),
+        required("StartDate", DATE),
+        required("EndDate", DATE),
+        required("Status", TEXT),
+        *AUDIT,
+    ])),
 ]

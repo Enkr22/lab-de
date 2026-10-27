@@ -1,0 +1,94 @@
+table fct_absence_day
+	lineageTag: 08820ee5-9c81-42e9-83fc-c9d4a58d15a1
+
+	measure 'Días naturales' = COUNTROWS ( fct_absence_day )
+		formatString: 0
+		lineageTag: 3b68b31a-ec6b-47bd-aa57-f01a2cf7fb03
+
+	measure 'Días hábiles' = CALCULATE ( COUNTROWS ( fct_absence_day ), dim_date[is_weekend] = FALSE () )
+		formatString: 0
+		lineageTag: 58409ee0-6f36-49aa-a4cc-fa05786e752f
+
+	measure 'Empleados con ausencia' = DISTINCTCOUNT ( fct_absence_day[employment_id] )
+		formatString: 0
+		lineageTag: 462003fc-5f1a-4d23-bc35-d177c133c6ec
+
+	column employment_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 65f65d71-ae1f-4b9b-a26b-833c2ee71aa2
+		summarizeBy: sum
+		sourceColumn: employment_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column absence_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: d4686560-6bae-4f71-a3e4-513ec260a928
+		summarizeBy: none
+		sourceColumn: absence_date
+
+		variation Variation
+			isDefault
+			relationship: 7323737f-8c71-4339-9e8e-d7cf28bb996b
+			defaultHierarchy: LocalDateTable_afe73453-5c34-48f8-8e7b-a5186125c1ba.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column date_key
+		dataType: int64
+		formatString: 0
+		lineageTag: dbdfffda-5524-486d-9163-bcbccfa7224b
+		summarizeBy: none
+		sourceColumn: date_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_sk
+		dataType: string
+		lineageTag: 1d1547f3-a305-47de-9414-bb41456e64a7
+		summarizeBy: none
+		sourceColumn: employee_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_code
+		dataType: string
+		lineageTag: 29c23ed0-d71e-48cf-9fa5-0f9207307a9d
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column absence_type
+		dataType: string
+		lineageTag: 217b4949-1b9f-48c2-b288-666dda205ce8
+		summarizeBy: none
+		sourceColumn: absence_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column absence_id
+		dataType: int64
+		formatString: 0
+		lineageTag: a6fd672c-1ee1-4fb0-93fa-b34fa14912aa
+		summarizeBy: sum
+		sourceColumn: absence_id
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fct_absence_day = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents("C:\dev\personal\lab-de\data\serving\fct_absence_day.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navegación
+

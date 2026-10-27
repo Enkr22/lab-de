@@ -1,0 +1,76 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "da24e03c771a4abb566e",
+  "position": {
+    "x": 45.221674876847288,
+    "y": 379.06403940886696,
+    "z": 5,
+    "height": 300.59113300492612,
+    "width": 610.49261083743841,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_absence_day"
+                    }
+                  },
+                  "Property": "absence_type"
+                }
+              },
+              "queryRef": "fct_absence_day.absence_type",
+              "nativeQueryRef": "absence_type",
+              "active": true
+            }
+          ]
+        },
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employee"
+                    }
+                  },
+                  "Property": "department_name"
+                }
+              },
+              "queryRef": "dim_employee.department_name",
+              "nativeQueryRef": "department_name",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_absence_day"
+                    }
+                  },
+                  "Property": "Días hábiles"
+                }
+              },
+              "queryRef": "fct_absence_day.Días hábiles",
+              "nativeQueryRef": "Días hábiles"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
