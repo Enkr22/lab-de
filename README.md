@@ -9,10 +9,10 @@ An end-to-end batch data pipeline over a synthetic, multi-country payroll system
 | | |
 |---|---|
 | Countries | 5 (MX, CO biweekly · AR, PY, UY monthly), each in its own currency |
-| Volume | ~4.9 M payroll movements · 30,000 employees · 30,746 employments · 10,444 settlements |
+| Volume | ~4.9 M payroll movements · 30,000 employees · 30,746 employments · 10,444 settlements · 144,551 absences |
 | Payroll window | 2023–2025 (252 payroll periods) |
-| Data model | 2 fact tables, 4 dimensions (one SCD Type 2) and a dbt snapshot |
-| Data quality | 47 dbt data tests, including reconciliation tests between layers |
+| Data model | 3 fact tables, 4 dimensions (one SCD Type 2) and a dbt snapshot |
+| Data quality | 60 dbt data tests, including reconciliation tests between layers and one test per business rule |
 | Incremental extract | Full load ~70 s → incremental run with no changes < 1 s |
 | Orchestration | Daily Airflow DAG (extract → dbt build → BI export) with retries; a full run takes ~45 s |
 
@@ -42,7 +42,7 @@ flowchart LR
 | Source | SQL Server 2022 in Docker | Normalized OLTP schema (9 tables) with constraints and audit columns |
 | Ingestion | Python, pandas, pyarrow, SQLAlchemy | Incremental extraction with explicit schema contracts |
 | Bronze | Parquet files | Immutable, append-only history of every load |
-| Transformation | dbt + DuckDB | Staging (deduplication, naming, formatting), snapshot and marts (dimensional model) |
+| Transformation | dbt + DuckDB | Staging (deduplication, naming, formatting), intermediate models, snapshot and marts (dimensional model) |
 | Serving | Python + DuckDB | Typed Parquet export for BI, decoupled from the dbt database |
 | BI | Power BI (PBIP) | Dashboard; semantic model and report versioned as text |
 | Orchestration | Airflow 3.3 in Docker | Scheduling, dependencies, retries |
@@ -53,6 +53,7 @@ flowchart LR
 
 - `fct_payroll_movement` — grain: one payroll movement (employment × period × concept). Joined point-in-time to the employee version in effect when it was paid. Exposes both the raw `amount` and a `signed_amount` (earnings positive, deductions negative). Incremental: `delete+insert` with a 3-day lookback.
 - `fct_settlement` — grain: one settlement (termination payout), with its lines pivoted into columns: vacation, indemnity, deductions and net amount.
+- `fct_absence_day` — grain: one absence day per employment. Absence ranges are expanded to days; cancelled absences and days outside the employment are excluded; and overlapping absences are resolved with the HR priority rule (sick leave > vacation > unjustified), so every day is counted once.
 
 **Dimensions**
 
@@ -67,7 +68,7 @@ flowchart LR
 
 ![Payroll dashboard](docs/dashboard.png)
 
-Power BI report over the marts: net pay, employees paid and settlements per country (in local currency), filterable by country and contract type.
+Power BI report over the marts: net pay, employees paid and settlements per country (in local currency), filterable by country and contract type, plus an absenteeism page by department, month and absence type, in business and calendar days.
 
 ## Engineering decisions
 
@@ -82,6 +83,8 @@ Power BI report over the marts: net pay, employees paid and settlements per coun
 **SCD Type 2 rebuilt from transactions.** The source overwrites salaries in place, as many real systems do. Salary history is reconstructed from the base-salary payroll movements with a gaps-and-islands approach, and facts are joined to the version in effect at payment time.
 
 **Honest about missing history.** For employees hired before the payroll window, earlier salary changes left no evidence. Instead of extrapolating, the first version starts at the first observed payroll and the record is flagged with `history_truncated` (17,876 employments).
+
+**Change the grain when the question requires it.** The source stores absences as date ranges, one row per request. The mart stores one row per employment per day, so days crossing a month boundary land in the right month, overlaps can be detected by a unique key, and business days are a filter on the date dimension rather than a separate calculation.
 
 **Captured history next to reconstructed history.** A dbt snapshot records employment changes as they are observed from now on, complementing the SCD2 rebuilt from transactions.
 
@@ -102,6 +105,7 @@ These are the issues that taught the most, kept here on purpose.
 3. **An SCD2 that invented history.** The first version of `dim_employee` claimed salaries had been in effect years before there was any evidence of them. Diagnosed as left censoring and fixed as described above.
 4. **Simulated source outage.** With the source database down, the extraction task retried twice and failed; the dbt task was marked `upstream_failed` and never ran, so no mart was built on incomplete data. After restoring the source, only the failed task and its downstream were cleared and re-run on the same DAG run.
 5. **A new source column the pipeline could not see.** A simulated application release added `ContractType` and back-filled it with direct `UPDATE`s that did not touch `UpdatedAt`, so the watermark extractor would never have picked up existing rows. On top of that, 31 values arrived as `'temporary '` (lowercase, trailing space): invisible in SQL Server, whose case-insensitive collation and trailing-space comparison grouped them with `TEMPORARY`, but distinct in DuckDB. Fixed with a single-table backfill, normalization in staging, `warn`-level tests for known source defects, and a one-off backfill of the snapshot's current versions only, leaving closed versions as unknown instead of inventing history. The application team now updates `UpdatedAt` in every data fix and added a CHECK constraint. Lesson: anything that detects change through `UpdatedAt` is blind to changes that bypass it; Change Data Capture is the structural fix.
+6. **Absence days counted twice.** Profiling the new absence table showed 4,492 pairs of overlapping absences for the same employment (for example, a sick leave during a vacation, or the same vacation captured twice). Expanding the ranges to days and summing them would have overstated absenteeism by 10,235 days (1.6%). HR defined a priority rule; the mart keeps one row per employment per day, and a test fails if any day appears twice.
 
 ## Repository structure
 
@@ -112,7 +116,7 @@ These are the issues that taught the most, kept here on purpose.
 ├── tests/                    SQL data tests for the generator
 ├── extract/                  Incremental extractor and schema contracts
 ├── warehouse/                Hand-written silver/gold layer (reference, pre-dbt)
-├── transform/                dbt project: staging, snapshot and marts
+├── transform/                dbt project: staging, intermediate, snapshot and marts
 ├── serving/                  Typed Parquet export for BI
 ├── orchestration/            Airflow image and DAG
 ├── bi/                       Power BI project (PBIP: model and report as text)
@@ -128,7 +132,7 @@ These are the issues that taught the most, kept here on purpose.
    ```bash
    docker compose up -d sqlserver
    ```
-3. **Build and populate the source.** Run `sql/00_*` through `sql/09_*` in order (SSMS or `sqlcmd`, port `1434`). Scripts `08` and `09` simulate an application release and its data fix (see problem 5 above); the current pipeline expects the column they add.
+3. **Build and populate the source.** Run `sql/00_*` through `sql/10_*` in order (SSMS or `sqlcmd`, port `1434`). Scripts `08` to `10` simulate application releases (a new column with dirty data, its fix, and a new absence table); the current pipeline expects them.
 4. **Create the read-only extraction user**, with the password from your `.env`:
    ```sql
    CREATE LOGIN extractor WITH PASSWORD = '<your-password>';
@@ -156,7 +160,6 @@ These are the issues that taught the most, kept here on purpose.
 ## Roadmap
 
 - CI with GitHub Actions running `dbt build` on every pull request, plus branch protection on `main`.
-- An absence (time-off) data mart, with date ranges expanded to a daily grain.
 - Change Data Capture as an alternative to watermark extraction.
 - A PySpark version of the transformation layer, to compare approaches at larger volumes.
 
