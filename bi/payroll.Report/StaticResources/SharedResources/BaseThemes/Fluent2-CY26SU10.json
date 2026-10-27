@@ -1,5 +1,5 @@
 {
-  "name": "Fluent2-CY26SU09",
+  "name": "Fluent2-CY26SU10",
   "dataColors": [
     "#118DFF",
     "#12239E",
@@ -2299,6 +2299,7 @@
         ],
         "categoryAxis": [
           {
+            "autoExpand": true,
             "gridlineShow": false,
             "innerPadding": 50
           }
@@ -2359,6 +2360,7 @@
         ],
         "categoryAxis": [
           {
+            "autoExpand": true,
             "innerPadding": 50
           }
         ],
@@ -2418,6 +2420,7 @@
         ],
         "categoryAxis": [
           {
+            "autoExpand": true,
             "innerPadding": 50
           }
         ],

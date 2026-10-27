@@ -1,6 +1,18 @@
 table fct_absence_day
 	lineageTag: 08820ee5-9c81-42e9-83fc-c9d4a58d15a1
 
+	measure 'Días naturales' = COUNTROWS ( fct_absence_day )
+		formatString: 0
+		lineageTag: 3b68b31a-ec6b-47bd-aa57-f01a2cf7fb03
+
+	measure 'Días hábiles' = CALCULATE ( COUNTROWS ( fct_absence_day ), dim_date[is_weekend] = FALSE () )
+		formatString: 0
+		lineageTag: 58409ee0-6f36-49aa-a4cc-fa05786e752f
+
+	measure 'Empleados con ausencia' = DISTINCTCOUNT ( fct_absence_day[employment_id] )
+		formatString: 0
+		lineageTag: 462003fc-5f1a-4d23-bc35-d177c133c6ec
+
 	column employment_id
 		dataType: int64
 		formatString: 0

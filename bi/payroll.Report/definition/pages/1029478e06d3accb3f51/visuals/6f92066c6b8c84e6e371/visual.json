@@ -1,0 +1,84 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "6f92066c6b8c84e6e371",
+  "position": {
+    "x": 30,
+    "y": 0,
+    "z": 9,
+    "height": 150,
+    "width": 280,
+    "tabOrder": 9
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_absence_day"
+                    }
+                  },
+                  "Property": "Sin país (ausencias)"
+                }
+              },
+              "queryRef": "fct_absence_day.Sin país (ausencias)",
+              "nativeQueryRef": "Sin país (ausencias)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_absence_day"
+                    }
+                  },
+                  "Property": "Sin país (nómina)"
+                }
+              },
+              "queryRef": "fct_absence_day.Sin país (nómina)",
+              "nativeQueryRef": "Sin país (nómina)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_absence_day"
+                    }
+                  },
+                  "Property": "Sin país (finiquitos)"
+                }
+              },
+              "queryRef": "fct_absence_day.Sin país (finiquitos)",
+              "nativeQueryRef": "Sin país (finiquitos)"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_absence_day"
+                  }
+                },
+                "Property": "Sin país (ausencias)"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

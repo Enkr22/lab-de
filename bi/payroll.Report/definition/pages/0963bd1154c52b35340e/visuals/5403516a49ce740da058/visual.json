@@ -1,0 +1,56 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "5403516a49ce740da058",
+  "position": {
+    "x": 355,
+    "y": 69,
+    "z": 4,
+    "height": 300,
+    "width": 300,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_absence_day"
+                    }
+                  },
+                  "Property": "Empleados con ausencia"
+                }
+              },
+              "queryRef": "fct_absence_day.Empleados con ausencia",
+              "nativeQueryRef": "Empleados con ausencia"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_absence_day"
+                  }
+                },
+                "Property": "Empleados con ausencia"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
