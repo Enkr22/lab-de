@@ -30,6 +30,7 @@ TABLES = [
     "dim_employee",
     "fct_payroll_movement",
     "fct_settlement",
+    "fct_absence_day",
 ]
 
 

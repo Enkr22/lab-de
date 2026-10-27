@@ -40,7 +40,6 @@ relationship 8626d8f5-c561-95a6-8d32-2c2f41e455b0
 	toColumn: dim_date.date_key
 
 relationship 16ba9370-7967-4db3-ea3f-f35336f4e141
-	crossFilteringBehavior: bothDirections
 	fromColumn: fct_settlement.employee_sk
 	toColumn: dim_employee.employee_sk
 
@@ -51,4 +50,37 @@ relationship f1681c29-b34b-d48e-96bf-f9aebbd17134
 relationship cb34a609-9f47-1258-4595-8bb54ce26ccc
 	fromColumn: fct_settlement.termination_date_key
 	toColumn: dim_date.date_key
+
+relationship 7323737f-8c71-4339-9e8e-d7cf28bb996b
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fct_absence_day.absence_date
+	toColumn: LocalDateTable_afe73453-5c34-48f8-8e7b-a5186125c1ba.Date
+
+relationship 6428ac0d-253e-e031-6388-74bbbcbd5b3c
+	fromColumn: fct_absence_day.date_key
+	toColumn: dim_date.date_key
+
+relationship 06f86ab3-6245-4444-46c2-f70a4ca66e3b
+	fromColumn: fct_absence_day.employee_sk
+	toColumn: dim_employee.employee_sk
+
+relationship 2f282003-1ea9-e16a-06a0-472ca414529c
+	isActive: false
+	fromColumn: fct_absence_day.country_code
+	toColumn: dim_country.country_code
+
+relationship 3077b772-5318-574e-da61-b478748dfe97
+	isActive: false
+	fromColumn: fct_payroll_movement.employment_id
+	toColumn: fct_settlement.employment_id
+
+relationship 4913f4ed-1047-5760-6594-547e4f8d78be
+	isActive: false
+	fromColumn: dim_concept.country_code
+	toColumn: dim_country.country_code
+
+relationship a7cf8a82-8c12-99d5-9065-999f0ca8240d
+	isActive: false
+	fromColumn: dim_employee.country_code
+	toColumn: dim_country.country_code
 

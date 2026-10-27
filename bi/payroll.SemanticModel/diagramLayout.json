@@ -85,6 +85,19 @@
             "width": 234
           },
           "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 431.48848485144288,
+            "y": 687.59404706101486
+          },
+          "nodeIndex": "fct_absence_day",
+          "nodeLineageTag": "08820ee5-9c81-42e9-83fc-c9d4a58d15a1",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 7
         }
       ],
       "name": "Todas las tablas",
